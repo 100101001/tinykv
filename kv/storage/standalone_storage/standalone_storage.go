@@ -1,6 +1,7 @@
 package standalone_storage
 
 import (
+	"errors"
 	"github.com/Connor1996/badger"
 	"github.com/pingcap-incubator/tinykv/kv/config"
 	"github.com/pingcap-incubator/tinykv/kv/storage"
@@ -47,7 +48,11 @@ type standAloneReader struct {
 }
 
 func (s standAloneReader) GetCF(cf string, key []byte) ([]byte, error) {
-	return engine_util.GetCFFromTxn(s.txn, cf, key)
+	val ,err := engine_util.GetCFFromTxn(s.txn, cf, key)
+	if err != nil && errors.Is(err, badger.ErrKeyNotFound) {
+		err = nil
+	}
+	return val, err
 }
 
 func (s standAloneReader) IterCF(cf string) engine_util.DBIterator {
